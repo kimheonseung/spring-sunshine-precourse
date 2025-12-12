@@ -1,9 +1,11 @@
 package sunshine.domain;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import sunshine.repository.WeatherCodeRepository;
 
 @Component
+@Transactional(readOnly = true)
 public class WeatherCodeTranslator {
 
     private static final String DEFAULT_DESCRIPTION = "알 수 없음";
