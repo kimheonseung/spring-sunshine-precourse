@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: weather-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: weather
+      MYSQL_DATABASE: weather
+      MYSQL_USER: weather
+      MYSQL_PASSWORD: weather
+    ports:
+      - "3306:3306"
+    volumes:
+      - weather-mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  weather-mysql-data:
