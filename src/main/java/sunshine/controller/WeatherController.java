@@ -7,8 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import sunshine.dto.WeatherResponse;
 import sunshine.entity.City;
-import sunshine.exception.CityNotFoundException;
-import sunshine.repository.CityRepository;
+import sunshine.service.CityReadService;
 import sunshine.service.WeatherService;
 
 @RestController
@@ -16,18 +15,16 @@ import sunshine.service.WeatherService;
 public class WeatherController {
 
     private final WeatherService weatherService;
-    private final CityRepository cityRepository;
+    private final CityReadService cityReadService;
 
-    public WeatherController(WeatherService weatherService, CityRepository cityRepository) {
+    public WeatherController(WeatherService weatherService, CityReadService cityReadService) {
         this.weatherService = weatherService;
-        this.cityRepository = cityRepository;
+        this.cityReadService = cityReadService;
     }
 
     @GetMapping
     public ResponseEntity<WeatherResponse> getWeather(@RequestParam String city) {
-        City foundCity = cityRepository.findByNameIgnoreCase(city)
-                .orElseThrow(() -> new CityNotFoundException(city));
-
+        City foundCity = cityReadService.findByName(city);
         WeatherResponse response = weatherService.getWeather(foundCity);
         return ResponseEntity.ok(response);
     }

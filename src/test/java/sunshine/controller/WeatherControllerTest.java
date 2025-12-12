@@ -9,11 +9,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import sunshine.dto.WeatherResponse;
 import sunshine.entity.City;
+import sunshine.exception.CityNotFoundException;
 import sunshine.exception.GlobalExceptionHandler;
-import sunshine.repository.CityRepository;
+import sunshine.service.CityReadService;
 import sunshine.service.WeatherService;
-
-import java.util.Optional;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,7 +30,7 @@ class WeatherControllerTest {
     private WeatherService weatherService;
 
     @MockBean
-    private CityRepository cityRepository;
+    private CityReadService cityReadService;
 
     @Test
     @DisplayName("유효한 도시로 요청하면 200 OK와 날씨 정보를 반환한다")
@@ -42,7 +41,7 @@ class WeatherControllerTest {
                 "현재 서울의 기온은 5.0°C이며, 체감 온도는 3.0°C입니다. 날씨는 맑음입니다."
         );
 
-        given(cityRepository.findByNameIgnoreCase("Seoul")).willReturn(Optional.of(mockCity));
+        given(cityReadService.findByName("Seoul")).willReturn(mockCity);
         given(weatherService.getWeather(mockCity)).willReturn(response);
 
         mockMvc.perform(get("/api/weather").param("city", "Seoul"))
@@ -56,7 +55,8 @@ class WeatherControllerTest {
     @Test
     @DisplayName("지원하지 않는 도시로 요청하면 400 Bad Request와 에러 응답을 반환한다")
     void getWeatherWithInvalidCity() throws Exception {
-        given(cityRepository.findByNameIgnoreCase("Unknown")).willReturn(Optional.empty());
+        given(cityReadService.findByName("Unknown"))
+                .willThrow(new CityNotFoundException("Unknown"));
 
         mockMvc.perform(get("/api/weather").param("city", "Unknown"))
                 .andExpect(status().isBadRequest())
