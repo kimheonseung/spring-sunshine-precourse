@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: spring-sunshine
+
+server:
+  servlet:
+    encoding:
+      # Spring Boot 3.x는 RFC 7159에 따라 JSON 응답에 charset을 명시하지 않음
+      # Safari 등 일부 브라우저 호환성을 위해 charset=UTF-8 강제 명시
+      force-response: true
