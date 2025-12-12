@@ -32,9 +32,11 @@
 4. `WeatherSummaryGenerator`로 요약 문장 생성
 5. `WeatherController`에서 REST API 제공
 
-### 2차 구현 (예정)
+### 2차 구현
 1. 도시 좌표 매핑을 DB 테이블로 관리 (추가/수정/삭제 용이)
 2. WMO weather code 매핑을 DB 테이블로 관리
+3. Docker Compose로 MySQL 환경 구성
+4. Flyway로 DB 마이그레이션 관리
 
 ---
 
@@ -92,14 +94,39 @@ Claude Code를 활용하여 대화형으로 프로젝트를 진행했습니다.
 
 ---
 
-### 2차 작업 (예정)
+### 2차 작업
 
-#### 개선 목표
+#### 진행 흐름
 
-1. **도시 좌표 매핑 DB 전환**
-   - 현재: `City` enum으로 하드코딩
-   - 개선: DB 테이블로 관리하여 추가/수정/삭제 용이하게 변경
+1. **DB 환경 구성**
+   - Docker Compose로 MySQL 컨테이너 설정
+   - Flyway 마이그레이션 스크립트 작성
 
-2. **WMO weather code 매핑 DB 전환**
-   - 현재: `WeatherCodeTranslator`에서 if문으로 하드코딩
-   - 개선: DB 테이블로 관리하여 매핑 정보 유연하게 관리
+2. **엔티티 및 Repository 구현**
+   - City 엔티티와 CityRepository 구현
+   - WeatherCode 엔티티와 WeatherCodeRepository 구현
+
+3. **기존 코드 리팩토링**
+   - WeatherController가 CityRepository를 사용하도록 변경
+   - WeatherCodeTranslator가 WeatherCodeRepository를 사용하도록 변경
+   - 기존 City enum 삭제
+
+4. **테스트 환경 구성**
+   - 테스트용 H2 인메모리 DB 설정
+   - data.sql로 테스트 데이터 초기화
+   - 테스트 코드를 DB 기반으로 수정
+
+#### AI 활용으로 수정한 내용
+
+**Docker 환경 구성**
+- `environment/docker-compose.yml`로 MySQL 8.0 컨테이너 설정
+- username/password를 `weather`로 설정
+
+**DB 스키마 설계**
+- `city` 테이블: id, name, korean_name, latitude, longitude
+- `weather_code` 테이블: id, code, description
+- Flyway 마이그레이션으로 테이블 생성 및 초기 데이터 삽입
+
+**테스트 환경 분리**
+- 운영: MySQL, 테스트: H2 인메모리 DB
+- `spring.jpa.defer-datasource-initialization`으로 data.sql 실행 순서 조정
