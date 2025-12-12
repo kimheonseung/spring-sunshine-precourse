@@ -2,7 +2,7 @@ package sunshine.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import sunshine.domain.City;
+import sunshine.entity.City;
 import sunshine.domain.WeatherCodeTranslator;
 import sunshine.domain.WeatherSummaryGenerator;
 import sunshine.dto.OpenMeteoResponse;

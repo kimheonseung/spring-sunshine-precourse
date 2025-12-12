@@ -7,10 +7,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
-import sunshine.domain.City;
 import sunshine.dto.WeatherResponse;
+import sunshine.entity.City;
 import sunshine.exception.GlobalExceptionHandler;
+import sunshine.repository.CityRepository;
 import sunshine.service.WeatherService;
+
+import java.util.Optional;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,14 +30,20 @@ class WeatherControllerTest {
     @MockBean
     private WeatherService weatherService;
 
+    @MockBean
+    private CityRepository cityRepository;
+
     @Test
     @DisplayName("유효한 도시로 요청하면 200 OK와 날씨 정보를 반환한다")
     void getWeatherWithValidCity() throws Exception {
+        City mockCity = createMockCity();
         WeatherResponse response = new WeatherResponse(
                 "Seoul", "서울", 5.0, 3.0, 50, "맑음",
                 "현재 서울의 기온은 5.0°C이며, 체감 온도는 3.0°C입니다. 날씨는 맑음입니다."
         );
-        given(weatherService.getWeather(City.SEOUL)).willReturn(response);
+
+        given(cityRepository.findByNameIgnoreCase("Seoul")).willReturn(Optional.of(mockCity));
+        given(weatherService.getWeather(mockCity)).willReturn(response);
 
         mockMvc.perform(get("/api/weather").param("city", "Seoul"))
                 .andExpect(status().isOk())
@@ -47,6 +56,8 @@ class WeatherControllerTest {
     @Test
     @DisplayName("지원하지 않는 도시로 요청하면 400 Bad Request와 에러 응답을 반환한다")
     void getWeatherWithInvalidCity() throws Exception {
+        given(cityRepository.findByNameIgnoreCase("Unknown")).willReturn(Optional.empty());
+
         mockMvc.perform(get("/api/weather").param("city", "Unknown"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("CITY_NOT_FOUND"))
@@ -60,5 +71,20 @@ class WeatherControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MISSING_PARAMETER"))
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    private City createMockCity() {
+        return new City() {
+            @Override
+            public Long getId() { return 1L; }
+            @Override
+            public String getName() { return "Seoul"; }
+            @Override
+            public String getKoreanName() { return "서울"; }
+            @Override
+            public Double getLatitude() { return 37.5665; }
+            @Override
+            public Double getLongitude() { return 126.9780; }
+        };
     }
 }
