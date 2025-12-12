@@ -107,11 +107,15 @@ Claude Code를 활용하여 대화형으로 프로젝트를 진행했습니다.
    - WeatherCode 엔티티와 WeatherCodeRepository 구현
 
 3. **기존 코드 리팩토링**
-   - WeatherController가 CityRepository를 사용하도록 변경
    - WeatherCodeTranslator가 WeatherCodeRepository를 사용하도록 변경
    - 기존 City enum 삭제
 
-4. **테스트 환경 구성**
+4. **레이어 구조 개선**
+   - Controller에서 Repository 직접 의존 제거
+   - CityReadService 추가 (readOnly 트랜잭션)
+   - WeatherCodeTranslator에 readOnly 트랜잭션 적용
+
+5. **테스트 환경 구성**
    - 테스트용 H2 인메모리 DB 설정
    - data.sql로 테스트 데이터 초기화
    - 테스트 코드를 DB 기반으로 수정
@@ -130,3 +134,33 @@ Claude Code를 활용하여 대화형으로 프로젝트를 진행했습니다.
 **테스트 환경 분리**
 - 운영: MySQL, 테스트: H2 인메모리 DB
 - `spring.jpa.defer-datasource-initialization`으로 data.sql 실행 순서 조정
+
+**레이어 구조 개선**
+- Controller → Service → Repository 의존 관계 정립
+- CityReadService로 도시 조회 로직 분리
+- `@Transactional(readOnly = true)`로 읽기 전용 트랜잭션 적용
+
+---
+
+## 실행 방법
+
+### 1. MySQL 컨테이너 실행
+```bash
+cd environment
+docker-compose up -d
+```
+
+### 2. 애플리케이션 실행
+```bash
+./gradlew bootRun
+```
+
+### 3. API 호출
+```bash
+curl "http://localhost:8080/api/weather?city=Seoul"
+```
+
+### 4. 테스트 실행
+```bash
+./gradlew test
+```
