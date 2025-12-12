@@ -50,21 +50,22 @@ public class WeatherService {
     private WeatherResponse buildWeatherResponse(City city, OpenMeteoResponse apiResponse) {
         OpenMeteoResponse.CurrentWeather current = apiResponse.current();
         String weatherCondition = weatherCodeTranslator.translate(current.weatherCode());
-        String summary = summaryGenerator.generate(
-                city.getKoreanName(),
-                current.temperature(),
-                current.apparentTemperature(),
-                weatherCondition
-        );
+        String summary = createSummary(city, current, weatherCondition);
+        return createWeatherResponse(city, current, weatherCondition, summary);
+    }
 
+    private String createSummary(City city, OpenMeteoResponse.CurrentWeather current, String condition) {
+        return summaryGenerator.generate(
+                city.getKoreanName(), current.temperature(), current.apparentTemperature(), condition
+        );
+    }
+
+    private WeatherResponse createWeatherResponse(
+            City city, OpenMeteoResponse.CurrentWeather current, String condition, String summary
+    ) {
         return new WeatherResponse(
-                city.getName(),
-                city.getKoreanName(),
-                current.temperature(),
-                current.apparentTemperature(),
-                current.humidity(),
-                weatherCondition,
-                summary
+                city.getName(), city.getKoreanName(), current.temperature(),
+                current.apparentTemperature(), current.humidity(), condition, summary
         );
     }
 }
