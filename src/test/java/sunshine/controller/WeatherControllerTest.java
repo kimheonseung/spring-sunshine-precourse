@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import sunshine.domain.City;
 import sunshine.dto.WeatherResponse;
+import sunshine.exception.GlobalExceptionHandler;
 import sunshine.service.WeatherService;
 
 import static org.mockito.BDDMockito.given;
@@ -16,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WeatherController.class)
+@Import(GlobalExceptionHandler.class)
 class WeatherControllerTest {
 
     @Autowired
@@ -42,16 +45,20 @@ class WeatherControllerTest {
     }
 
     @Test
-    @DisplayName("지원하지 않는 도시로 요청하면 400 Bad Request를 반환한다")
+    @DisplayName("지원하지 않는 도시로 요청하면 400 Bad Request와 에러 응답을 반환한다")
     void getWeatherWithInvalidCity() throws Exception {
         mockMvc.perform(get("/api/weather").param("city", "Unknown"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CITY_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
-    @DisplayName("city 파라미터 없이 요청하면 400 Bad Request를 반환한다")
+    @DisplayName("city 파라미터 없이 요청하면 400 Bad Request와 에러 응답을 반환한다")
     void getWeatherWithoutCityParam() throws Exception {
         mockMvc.perform(get("/api/weather"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("MISSING_PARAMETER"))
+                .andExpect(jsonPath("$.message").exists());
     }
 }
