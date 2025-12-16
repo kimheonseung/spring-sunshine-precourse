@@ -1,6 +1,6 @@
 plugins {
-    id("org.springframework.boot") version "3.3.1"
-    id("io.spring.dependency-management") version "1.1.5"
+    id("org.springframework.boot") version "3.5.8"
+    id("io.spring.dependency-management") version "1.1.7"
     kotlin("plugin.jpa") version "1.9.24"
     kotlin("jvm") version "1.9.24"
     kotlin("plugin.spring") version "1.9.24"
@@ -24,6 +24,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation(platform("org.springframework.ai:spring-ai-bom:1.1.2"))
+    implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-mysql")

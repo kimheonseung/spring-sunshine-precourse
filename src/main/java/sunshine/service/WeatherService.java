@@ -1,71 +1,68 @@
 package sunshine.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import sunshine.entity.City;
+import sunshine.data.RecommendClothsData;
+import sunshine.data.WeatherData;
+import sunshine.data.WeatherForecastData;
 import sunshine.domain.WeatherCodeTranslator;
 import sunshine.domain.WeatherSummaryGenerator;
-import sunshine.dto.OpenMeteoResponse;
-import sunshine.dto.WeatherResponse;
+import sunshine.entity.City;
 
 @Service
 public class WeatherService {
 
-    private static final String OPEN_METEO_API_URL = "https://api.open-meteo.com/v1/forecast";
-
-    private final RestClient restClient;
+    private final WeatherProviderService weatherProviderService;
     private final WeatherCodeTranslator weatherCodeTranslator;
     private final WeatherSummaryGenerator summaryGenerator;
+    private final CityReadService cityReadService;
+    private final GeminiWeatherProviderService geminiWeatherProviderService;
 
     public WeatherService(
-            RestClient.Builder restClientBuilder,
+            WeatherProviderService weatherProviderService,
             WeatherCodeTranslator weatherCodeTranslator,
-            WeatherSummaryGenerator summaryGenerator
+            WeatherSummaryGenerator summaryGenerator,
+            CityReadService cityReadService,
+            GeminiWeatherProviderService geminiWeatherProviderService
     ) {
-        this.restClient = restClientBuilder.build();
+        this.weatherProviderService = weatherProviderService;
         this.weatherCodeTranslator = weatherCodeTranslator;
         this.summaryGenerator = summaryGenerator;
+        this.cityReadService = cityReadService;
+        this.geminiWeatherProviderService = geminiWeatherProviderService;
     }
 
-    public WeatherResponse getWeather(City city) {
-        OpenMeteoResponse apiResponse = fetchWeatherData(city);
-        return buildWeatherResponse(city, apiResponse);
+    public Object getWeatherByPlace(String place) {
+        try {
+            return geminiWeatherProviderService.getCurrentWeatherAndRecommendCloths(place);
+        } catch (Exception e) {
+            City foundCityOp = cityReadService.findByNameOptional("seoul");
+            return getWeather(foundCityOp);
+        }
     }
 
-    private OpenMeteoResponse fetchWeatherData(City city) {
-        return restClient.get()
-                .uri(OPEN_METEO_API_URL + buildQueryParams(city))
-                .retrieve()
-                .body(OpenMeteoResponse.class);
+    public WeatherForecastData getWeather(City city) {
+        WeatherData weatherData = weatherProviderService.getCurrent(city.getLatitude(), city.getLongitude());
+        return buildWeatherResponse(city, weatherData);
     }
 
-    private String buildQueryParams(City city) {
-        return String.format(
-                "?latitude=%f&longitude=%f&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code",
-                city.getLatitude(),
-                city.getLongitude()
-        );
+    private WeatherForecastData buildWeatherResponse(City city, WeatherData weatherData) {
+        String weatherCondition = weatherCodeTranslator.translate(weatherData.weatherCode());
+        String summary = createSummary(city, weatherData.temperature(), weatherData.apparentTemperature(), weatherCondition);
+        return createWeatherResponse(city, weatherData.temperature(), weatherData.apparentTemperature(), weatherData.humidity(), weatherCondition, summary);
     }
 
-    private WeatherResponse buildWeatherResponse(City city, OpenMeteoResponse apiResponse) {
-        OpenMeteoResponse.CurrentWeather current = apiResponse.current();
-        String weatherCondition = weatherCodeTranslator.translate(current.weatherCode());
-        String summary = createSummary(city, current, weatherCondition);
-        return createWeatherResponse(city, current, weatherCondition, summary);
-    }
-
-    private String createSummary(City city, OpenMeteoResponse.CurrentWeather current, String condition) {
+    private String createSummary(City city, double temperature, double apparentTemperature, String condition) {
         return summaryGenerator.generate(
-                city.getKoreanName(), current.temperature(), current.apparentTemperature(), condition
+                city.getKoreanName(), temperature, apparentTemperature, condition
         );
     }
 
-    private WeatherResponse createWeatherResponse(
-            City city, OpenMeteoResponse.CurrentWeather current, String condition, String summary
+    private WeatherForecastData createWeatherResponse(
+            City city, double temperature, double apparentTemperature, int humidity, String condition, String summary
     ) {
-        return new WeatherResponse(
-                city.getName(), city.getKoreanName(), current.temperature(),
-                current.apparentTemperature(), current.humidity(), condition, summary
+        return new WeatherForecastData(
+                city.getKoreanName(), temperature,
+                apparentTemperature, humidity, condition, RecommendClothsData.empty()
         );
     }
 }

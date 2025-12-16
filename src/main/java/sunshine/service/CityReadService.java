@@ -6,6 +6,8 @@ import sunshine.entity.City;
 import sunshine.exception.CityNotFoundException;
 import sunshine.repository.CityRepository;
 
+import java.util.Optional;
+
 @Service
 @Transactional(readOnly = true)
 public class CityReadService {
@@ -17,6 +19,11 @@ public class CityReadService {
     }
 
     public City findByName(String name) {
+        return cityRepository.findByNameIgnoreCase(name)
+                .orElseThrow(() -> new CityNotFoundException(name));
+    }
+
+    public City findByNameOptional(String name) {
         return cityRepository.findByNameIgnoreCase(name)
                 .orElseThrow(() -> new CityNotFoundException(name));
     }

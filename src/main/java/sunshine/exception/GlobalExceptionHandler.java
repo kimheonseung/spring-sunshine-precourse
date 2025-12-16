@@ -20,4 +20,10 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.of("MISSING_PARAMETER", e.getMessage());
         return ResponseEntity.badRequest().body(response);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        ErrorResponse response = ErrorResponse.of("INTERNAL_SERVER_ERROR", e.getMessage());
+        return ResponseEntity.internalServerError().body(response);
+    }
 }

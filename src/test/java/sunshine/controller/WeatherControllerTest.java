@@ -4,10 +4,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import sunshine.dto.WeatherResponse;
+import sunshine.data.RecommendClothsData;
+import sunshine.data.WeatherForecastData;
 import sunshine.entity.City;
 import sunshine.exception.CityNotFoundException;
 import sunshine.exception.GlobalExceptionHandler;
@@ -26,19 +27,19 @@ class WeatherControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private WeatherService weatherService;
 
-    @MockBean
+    @MockitoBean
     private CityReadService cityReadService;
 
     @Test
     @DisplayName("유효한 도시로 요청하면 200 OK와 날씨 정보를 반환한다")
     void getWeatherWithValidCity() throws Exception {
         City mockCity = createMockCity();
-        WeatherResponse response = new WeatherResponse(
-                "Seoul", "서울", 5.0, 3.0, 50, "맑음",
-                "현재 서울의 기온은 5.0°C이며, 체감 온도는 3.0°C입니다. 날씨는 맑음입니다."
+        WeatherForecastData response = new WeatherForecastData(
+                "서울", 5.0, 3.0, 50, "맑음",
+                RecommendClothsData.empty()
         );
 
         given(cityReadService.findByName("Seoul")).willReturn(mockCity);
